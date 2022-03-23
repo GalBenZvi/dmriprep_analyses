@@ -4,4 +4,4 @@ Reference
 .. toctree::
     :glob:
 
-    qsiprep_analyses*
+    dmriprep_analyses*

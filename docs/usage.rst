@@ -2,6 +2,6 @@
 Usage
 =====
 
-To use qsiprep_analyses in a project::
+To use dmriprep_analyses in a project::
 
-	import qsiprep_analyses
+	import dmriprep_analyses

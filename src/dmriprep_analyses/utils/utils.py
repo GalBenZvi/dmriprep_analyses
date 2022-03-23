@@ -57,12 +57,7 @@ def collect_subjects(
 
     if isinstance(participant_labels, str):
         participant_labels = [participant_labels]
-    return {
-        participant_label: instance.data_grabber.subjects.get(
-            participant_label
-        )
-        for participant_label in participant_labels
-    }
+    return {participant_label: instance.data_grabber.subjects.get(participant_label) for participant_label in participant_labels}
 
 
 def apply_bids_filters(original: dict, replacements: dict) -> dict:

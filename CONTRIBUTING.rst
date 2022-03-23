@@ -8,7 +8,7 @@ little bit helps, and credit will always be given.
 Bug reports
 ===========
 
-When `reporting a bug <https://github.com/niparser/qsiprep_analyses/issues>`_ please include:
+When `reporting a bug <https://github.com/GalBenZvi/dmriprep_analyses/issues>`_ please include:
 
     * Your operating system name and version.
     * Any details about your local setup that might be helpful in troubleshooting.
@@ -17,14 +17,14 @@ When `reporting a bug <https://github.com/niparser/qsiprep_analyses/issues>`_ pl
 Documentation improvements
 ==========================
 
-qsiprep_analyses could always use more documentation, whether as part of the
-official qsiprep_analyses docs, in docstrings, or even on the web in blog posts,
+dmriprep_analyses could always use more documentation, whether as part of the
+official dmriprep_analyses docs, in docstrings, or even on the web in blog posts,
 articles, and such.
 
 Feature requests and feedback
 =============================
 
-The best way to send feedback is to file an issue at https://github.com/niparser/qsiprep_analyses/issues.
+The best way to send feedback is to file an issue at https://github.com/GalBenZvi/dmriprep_analyses/issues.
 
 If you are proposing a feature:
 
@@ -35,13 +35,13 @@ If you are proposing a feature:
 Development
 ===========
 
-To set up `qsiprep_analyses` for local development:
+To set up `dmriprep_analyses` for local development:
 
-1. Fork `qsiprep_analyses <https://github.com/niparser/qsiprep_analyses>`_
+1. Fork `dmriprep_analyses <https://github.com/GalBenZvi/dmriprep_analyses>`_
    (look for the "Fork" button).
 2. Clone your fork locally::
 
-    git clone git@github.com:YOURGITHUBNAME/qsiprep_analyses.git
+    git clone git@github.com:YOURGITHUBNAME/dmriprep_analyses.git
 
 3. Create a branch for local development::
 
@@ -74,7 +74,7 @@ For merging, you should:
 4. Add yourself to ``AUTHORS.rst``.
 
 .. [1] If you don't have all the necessary python versions available locally you can rely on Travis - it will
-       `run the tests <https://travis-ci.com/github/niparser/qsiprep_analyses/pull_requests>`_
+       `run the tests <https://travis-ci.com/github/GalBenZvi/dmriprep_analyses/pull_requests>`_
        for each change you add in the pull request.
 
        It will be slower though ...

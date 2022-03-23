@@ -73,5 +73,5 @@ docs/_build
 # Mypy Cache
 .mypy_cache/
 
-# notebooks
+# Trials
 *.ipynb

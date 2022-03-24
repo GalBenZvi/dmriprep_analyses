@@ -27,6 +27,31 @@ class NativeParcellation(DmriprepManager):
         self.parcellation_manager = parcellation_manager()
         self.tensor_estimation = TensorEstimation(base_dir, participant_labels)
 
+    def validate_session(self, participant_label: str, session: Union[str, list] = None) -> list:
+        """
+        Validates session's input type (must be list)
+
+        Parameters
+        ----------
+        participant_label : str
+            Specific participants' labels
+        session : Union[str, list], optional
+            Specific session(s)' labels, by default None
+
+        Returns
+        -------
+        list
+            Either specified or available session(s)' labels
+        """
+        if session:
+            if isinstance(session, str):
+                sessions = [session]
+            elif isinstance(session, list):
+                sessions = session
+        else:
+            sessions = self.subjects.get(participant_label)
+        return sessions
+
     def generate_rows(
         self,
         participant_label: str,
@@ -49,13 +74,7 @@ class NativeParcellation(DmriprepManager):
             A MultiIndex comprised of participant's label
             and its corresponding sessions.
         """
-        if session:
-            if isinstance(session, str):
-                sessions = [session]
-            elif isinstance(session, str):
-                sessions = session
-        else:
-            sessions = self.subjects.get(participant_label)
+        sessions = self.validate_session(participant_label, session)
         metrics = self.tensor_estimation.METRICS.get(tensor_type)
         return pd.MultiIndex.from_product([[participant_label], sessions, metrics])
 
@@ -137,7 +156,7 @@ class NativeParcellation(DmriprepManager):
             A DataFrame with (participant_label,session,tensor_type,metrics)
             as index and (parcellation_scheme,label) as columns
         """
-        rows = self.generate_rows(participant_label, session, tensor_type)
+        sessions = self.validate_session(participant_label, session)
         tensors = self.tensor_estimation.run_single_subject(participant_label, session, tensor_type)
         parcellation_images = self.registration_manager.run_single_subject(
             parcellation_scheme,
@@ -146,8 +165,11 @@ class NativeParcellation(DmriprepManager):
             session,
             force=force,
         )
-        data = pd.DataFrame(index=rows)
-        for session in rows.levels[1]:
+        subject_rows = self.generate_rows(participant_label, sessions, tensor_type)
+        subject_data = pd.DataFrame(index=subject_rows)
+        for session in sessions:
+            rows = self.generate_rows(participant_label, session, tensor_type)
+            data = pd.DataFrame(index=rows)
             parcellation = parcellation_images.get(session).get(parcellation_type)
             output_file = self.build_output_name(
                 parcellation_scheme,
@@ -157,7 +179,8 @@ class NativeParcellation(DmriprepManager):
                 measure,
             )
             if output_file.exists() and not force:
-                return pd.read_pickle(output_file)
+                data = pd.read_pickle(output_file)
+                subject_data = pd.concat([subject_data, data])
             for metric, metric_image in tensors.get(session).get(tensor_type)[0].items():
                 key = metric.split("_")[-1]
 
@@ -173,7 +196,8 @@ class NativeParcellation(DmriprepManager):
                     tmp_data.index,
                 ] = tmp_data.loc[tmp_data.index]
             data.to_pickle(output_file)
-        return data
+            subject_data = pd.concat([subject_data, data])
+        return subject_data
 
     def parcellate_single_subject(
         self,

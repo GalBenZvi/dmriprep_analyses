@@ -1,6 +1,6 @@
 from click.testing import CliRunner
 
-from qsiprep_analyses.cli import main
+from dmriprep_analyses.cli import main
 
 
 def test_main():

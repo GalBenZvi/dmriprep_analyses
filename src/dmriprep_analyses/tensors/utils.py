@@ -1,4 +1,4 @@
-DWI_ENTITIES = dict(suffix="dwi", extension=".nii.gz")
+DWI_ENTITIES = dict(suffix="dwi", extension=".nii.gz", space="T1w")
 
 TENSOR_DERIVED_ENTITIES = dict(suffix="dwiref", resolution="dwi")
 

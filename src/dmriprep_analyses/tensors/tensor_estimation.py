@@ -10,17 +10,18 @@ from typing import Union
 import tqdm
 from dipy.workflows.reconst import ReconstDkiFlow
 from dipy.workflows.reconst import ReconstDtiFlow
-from qsiprep_analyses.manager import QsiprepManager
-from qsiprep_analyses.tensors.messages import INVALID_OUTPUT
-from qsiprep_analyses.tensors.messages import INVALID_PARTICIPANT
-from qsiprep_analyses.tensors.messages import TENSOR_RECONSTRUCTION_NOT_IMPLEMENTED
-from qsiprep_analyses.tensors.utils import DWI_ENTITIES
-from qsiprep_analyses.tensors.utils import KWARGS_MAPPING
-from qsiprep_analyses.tensors.utils import TENSOR_DERIVED_ENTITIES
-from qsiprep_analyses.tensors.utils import TENSOR_DERIVED_METRICS
+
+from dmriprep_analyses.manager import DmriprepManager
+from dmriprep_analyses.tensors.messages import INVALID_OUTPUT
+from dmriprep_analyses.tensors.messages import INVALID_PARTICIPANT
+from dmriprep_analyses.tensors.messages import TENSOR_RECONSTRUCTION_NOT_IMPLEMENTED
+from dmriprep_analyses.tensors.utils import DWI_ENTITIES
+from dmriprep_analyses.tensors.utils import KWARGS_MAPPING
+from dmriprep_analyses.tensors.utils import TENSOR_DERIVED_ENTITIES
+from dmriprep_analyses.tensors.utils import TENSOR_DERIVED_METRICS
 
 
-class TensorEstimation(QsiprepManager):
+class TensorEstimation(DmriprepManager):
     #: Templates
     DWI_QUERY_ENTITIES = DWI_ENTITIES.copy()
     TENSOR_ENTITIES = TENSOR_DERIVED_ENTITIES.copy()

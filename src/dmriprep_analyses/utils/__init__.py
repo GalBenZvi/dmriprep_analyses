@@ -1,3 +1,3 @@
 """
-Utilities for the :mod:`qsiprep_analyses` package.
+Utilities for the :mod:`dmriprep_analyses` package.
 """

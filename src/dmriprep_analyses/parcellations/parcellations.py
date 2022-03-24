@@ -9,13 +9,14 @@ from typing import Union
 import numpy as np
 import pandas as pd
 from brain_parts.parcellation.parcellations import Parcellation as parcellation_manager
-from qsiprep_analyses.manager import QsiprepManager
-from qsiprep_analyses.registrations.registrations import NativeRegistration
-from qsiprep_analyses.tensors.tensor_estimation import TensorEstimation
 from tqdm import tqdm
 
+from dmriprep_analyses.manager import DmriprepManager
+from dmriprep_analyses.registrations.registrations import NativeRegistration
+from dmriprep_analyses.tensors.tensor_estimation import TensorEstimation
 
-class NativeParcellation(QsiprepManager):
+
+class NativeParcellation(DmriprepManager):
     def __init__(
         self,
         base_dir: Path,

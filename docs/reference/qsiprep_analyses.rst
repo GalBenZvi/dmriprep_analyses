@@ -1,9 +1,9 @@
-qsiprep_analyses
+dmriprep_analyses
 ================
 
 .. testsetup::
 
-    from qsiprep_analyses import *
+    from dmriprep_analyses import *
 
-.. automodule:: qsiprep_analyses
+.. automodule:: dmriprep_analyses
     :members:

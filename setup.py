@@ -14,12 +14,15 @@ from setuptools import setup
 
 
 def read(*names, **kwargs):
-    with io.open(join(dirname(__file__), *names), encoding=kwargs.get('encoding', 'utf8')) as fh:
+    with io.open(
+        join(dirname(__file__), *names),
+        encoding=kwargs.get('encoding', 'utf8'),
+    ) as fh:
         return fh.read()
 
 
 setup(
-    name='niparser',
+    name='dmriprep_analyses',
     version='0.0.0',
     license='Apache-2.0',
     description='A package to process data derived from dmriprep pipeline',

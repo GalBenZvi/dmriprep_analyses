@@ -9,15 +9,16 @@ import nibabel as nib
 from brain_parts.parcellation.parcellations import Parcellation as parcellation_manager
 from nilearn.image.resampling import resample_to_img
 from nipype.interfaces.base import TraitError
-from qsiprep_analyses.manager import QsiprepManager
-from qsiprep_analyses.registrations.utils import DEFAULT_PARCELLATION_NAMING
-from qsiprep_analyses.registrations.utils import PROBSEG_THRESHOLD
-from qsiprep_analyses.registrations.utils import QUERIES
-from qsiprep_analyses.registrations.utils import TRANSFORMS
 from tqdm import tqdm
 
+from dmriprep_analyses.manager import DmriprepManager
+from dmriprep_analyses.registrations.utils import DEFAULT_PARCELLATION_NAMING
+from dmriprep_analyses.registrations.utils import PROBSEG_THRESHOLD
+from dmriprep_analyses.registrations.utils import QUERIES
+from dmriprep_analyses.registrations.utils import TRANSFORMS
 
-class NativeRegistration(QsiprepManager):
+
+class NativeRegistration(DmriprepManager):
     QUERIES = QUERIES
 
     #: Naming

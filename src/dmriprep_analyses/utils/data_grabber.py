@@ -5,7 +5,8 @@ from pathlib import Path
 from typing import Union
 
 import bids
-from qsiprep_analyses.data.bids import BIDS_CONFIGURATION_FILE
+
+from dmriprep_analyses.data.bids import BIDS_CONFIGURATION_FILE
 
 
 class DataGrabber:
@@ -14,7 +15,7 @@ class DataGrabber:
     SESSION_TEMPLATE = "ses-"
 
     #: Pybids configurations
-    PYBIDS_CONFIG = {"qsiprep": BIDS_CONFIGURATION_FILE}
+    PYBIDS_CONFIG = {"dmriprep": BIDS_CONFIGURATION_FILE}
 
     def __init__(self, base_dir: Path, generate_layout: bool = True) -> None:
         self.base_dir = Path(base_dir)

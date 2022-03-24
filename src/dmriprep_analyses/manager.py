@@ -2,12 +2,12 @@ from pathlib import Path
 from typing import List
 from typing import Union
 
-from qsiprep_analyses.utils.utils import apply_bids_filters
-from qsiprep_analyses.utils.utils import collect_subjects
-from qsiprep_analyses.utils.utils import validate_instantiation
+from dmriprep_analyses.utils.utils import apply_bids_filters
+from dmriprep_analyses.utils.utils import collect_subjects
+from dmriprep_analyses.utils.utils import validate_instantiation
 
 
-class QsiprepManager:
+class DmriprepManager:
     def __init__(
         self,
         base_dir: Path,

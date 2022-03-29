@@ -1,7 +1,7 @@
 """
 Definition of the :class:`NativeParcellation` class.
 """
-import warnings
+# import warnings
 from pathlib import Path
 from typing import Callable
 from typing import Union
@@ -13,7 +13,7 @@ from tqdm import tqdm
 
 from dmriprep_analyses.manager import DmriprepManager
 from dmriprep_analyses.registrations.registrations import NativeRegistration
-from dmriprep_analyses.tensors.tensor_estimation import TensorEstimation
+from dmriprep_analyses.tensors.tensor_estimation_mrtrix import TensorEstimation
 
 
 class NativeParcellation(DmriprepManager):
@@ -233,20 +233,23 @@ class NativeParcellation(DmriprepManager):
         """
         data = pd.DataFrame()
         for tensor_type in self.tensor_estimation.TENSOR_TYPES:
-            try:
-                tensor_data = self.parcellate_single_tensor(
-                    parcellation_scheme,
-                    tensor_type,
-                    participant_label,
-                    parcellation_type,
-                    session,
-                    measure,
-                    force,
-                )
-                tensor_data = pd.concat([tensor_data], keys=[tensor_type])
-                data = pd.concat([data, tensor_data])
-            except (TypeError, FileNotFoundError):
-                warnings.warn(f"Encountered an error when trying to parcellate subject {participant_label}'s data...")  # noqa
+            # try:
+            tensor_data = self.parcellate_single_tensor(
+                parcellation_scheme,
+                tensor_type,
+                participant_label,
+                parcellation_type,
+                session,
+                measure,
+                force,
+            )
+            tensor_data = pd.concat([tensor_data], keys=[tensor_type])
+            data = pd.concat([data, tensor_data])
+            # except (TypeError, FileNotFoundError):
+            #     # except IndexError:
+            #     warnings.warn(
+            #         f"Encountered an error when trying to parcellate subject {participant_label}'s data..."
+            #     )  # noqa
         return data
 
     def parcellate_dataset(
@@ -255,9 +258,29 @@ class NativeParcellation(DmriprepManager):
         parcellation_type: str = "whole_brain",
         measure: Callable = np.nanmean,
         force: bool = False,
-    ):
+    ) -> pd.DataFrame:
+        """
+        Iterates over dataset's available participants and reconstructs their tensor-derived metrics' data.
+
+        Parameters
+        ----------
+        parcellation_scheme : str
+            Parcellation scheme to parcellate by
+        parcellation_type : str, optional
+            Either "whole_brain" or "gm_cropped", by default "whole_brain"
+        measure : Callable, optional
+            Measure to parcellate by, by default np.nanmean
+        force : bool, optional
+            Whether to re-write existing files, by default False
+
+        Returns
+        -------
+        pd.DataFrame
+            A dataframe describing all dataset's available tensor-derived data.
+        """
         data = pd.DataFrame()
         for participant_label in tqdm(self.subjects):
+            print(participant_label)
             data = pd.concat(
                 [
                     data,

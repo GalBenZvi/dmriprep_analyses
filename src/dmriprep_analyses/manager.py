@@ -1,14 +1,13 @@
 from pathlib import Path
-from typing import List, Union
+from typing import List
+from typing import Union
 
-from qsiprep_analyses.utils.utils import (
-    apply_bids_filters,
-    collect_subjects,
-    validate_instantiation,
-)
+from dmriprep_analyses.utils.utils import apply_bids_filters
+from dmriprep_analyses.utils.utils import collect_subjects
+from dmriprep_analyses.utils.utils import validate_instantiation
 
 
-class QsiprepManager:
+class DmriprepManager:
     def __init__(
         self,
         base_dir: Path,
@@ -115,9 +114,7 @@ class QsiprepManager:
         result = self.data_grabber.layout.get(**query)
         return Path(result[0].path) if result else None
 
-    def get_subject_dwi(
-        self, participant_label: str, session: str = None, queries: dict = None
-    ) -> List[dict]:
+    def get_subject_dwi(self, participant_label: str, session: str = None, queries: dict = None) -> List[dict]:
         """
         Locate subject's available preprocessed DWIs and their corresponding
         gradients (.bvec and .bval).
@@ -149,9 +146,7 @@ class QsiprepManager:
                     "dwi": dwi,
                     "bval": self.data_grabber.layout.get_bval(dwi),
                     "bvec": self.data_grabber.layout.get_bvec(dwi),
-                    "mask": self.data_grabber.build_path(
-                        dwi, {"desc": "brain", "suffix": "mask"}
-                    ),
+                    "mask": self.data_grabber.build_path(dwi, {"desc": "brain", "suffix": "mask"}),
                 }
             )
         return result

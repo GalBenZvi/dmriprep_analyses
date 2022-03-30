@@ -1,5 +1,5 @@
 """
-Entrypoint module, in case you use `python -m qsiprep_analyses`.
+Entrypoint module, in case you use `python -m dmriprep_analyses`.
 
 Why does this file exist, and why __main__? For more info, read:
 
@@ -7,7 +7,7 @@ Why does this file exist, and why __main__? For more info, read:
 - https://docs.python.org/2/using/cmdline.html#cmdoption-m
 - https://docs.python.org/3/using/cmdline.html#cmdoption-m
 """
-from qsiprep_analyses.cli import main
+from dmriprep_analyses.cli import main
 
 if __name__ == "__main__":
     main()

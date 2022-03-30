@@ -1,8 +1,8 @@
 from pathlib import Path
 from typing import Union
 
-from qsiprep_analyses.utils.data_grabber import DataGrabber
-from qsiprep_analyses.utils.messages import MISSING_DATAGRABBER
+from dmriprep_analyses.utils.data_grabber import DataGrabber
+from dmriprep_analyses.utils.messages import MISSING_DATAGRABBER
 
 
 def validate_instantiation(
@@ -17,7 +17,7 @@ def validate_instantiation(
     Parameters
     ----------
     base_dir : Path, optional
-        A base directory of *qsiprep*'s derivatives, by default None
+        A base directory of *dmriprep*'s derivatives, by default None
     data_grabber : DataGrabber, optional
         A DataGrabber instance, already instansiated with a *base_dir*, by
         default None
@@ -57,12 +57,7 @@ def collect_subjects(
 
     if isinstance(participant_labels, str):
         participant_labels = [participant_labels]
-    return {
-        participant_label: instance.data_grabber.subjects.get(
-            participant_label
-        )
-        for participant_label in participant_labels
-    }
+    return {participant_label: instance.data_grabber.subjects.get(participant_label) for participant_label in participant_labels}
 
 
 def apply_bids_filters(original: dict, replacements: dict) -> dict:

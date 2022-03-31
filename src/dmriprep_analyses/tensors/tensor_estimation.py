@@ -14,7 +14,9 @@ from dipy.workflows.reconst import ReconstDtiFlow
 from dmriprep_analyses.manager import DmriprepManager
 from dmriprep_analyses.tensors.messages import INVALID_OUTPUT
 from dmriprep_analyses.tensors.messages import INVALID_PARTICIPANT
-from dmriprep_analyses.tensors.messages import TENSOR_RECONSTRUCTION_NOT_IMPLEMENTED
+from dmriprep_analyses.tensors.messages import (
+    TENSOR_RECONSTRUCTION_NOT_IMPLEMENTED,
+)
 from dmriprep_analyses.tensors.utils import DWI_ENTITIES
 from dmriprep_analyses.tensors.utils import KWARGS_MAPPING
 from dmriprep_analyses.tensors.utils import TENSOR_DERIVED_ENTITIES
@@ -64,7 +66,11 @@ class TensorEstimation(DmriprepManager):
             tensor-estimation protocol
         """
         if tensor_type not in self.TENSOR_TYPES:
-            raise NotImplementedError(TENSOR_RECONSTRUCTION_NOT_IMPLEMENTED.format(tensor_type=tensor_type))
+            raise NotImplementedError(
+                TENSOR_RECONSTRUCTION_NOT_IMPLEMENTED.format(
+                    tensor_type=tensor_type
+                )
+            )
         return self.TENSOR_TYPES.get(tensor_type)
 
     def validate_requested_output(self, tensor_type: str, output: str) -> bool:
@@ -97,7 +103,9 @@ class TensorEstimation(DmriprepManager):
             )
             return False
 
-    def build_output_dictionary(self, source: Path, tensor_type: str, outputs: List[str] = None) -> dict:
+    def build_output_dictionary(
+        self, source: Path, tensor_type: str, outputs: List[str] = None
+    ) -> dict:
         """
         Based on a *source* DWI, reconstruct output names for tensor-derived
         metric available under *tensor_type*.
@@ -123,14 +131,18 @@ class TensorEstimation(DmriprepManager):
             if self.validate_requested_output(tensor_type, output):
                 output_parts = output.split("_")
                 if len(output_parts) > 1:
-                    output_desc = "".join([output_parts[0], output_parts[1].capitalize()])
+                    output_desc = "".join(
+                        [output_parts[0], output_parts[1].capitalize()]
+                    )
                 else:
                     output_desc = output
                 target[f"out_{output}"] = str(
                     self.data_grabber.build_path(
                         source,
                         {
-                            "acquisition": self.TENSOR_TYPES.get(tensor_type).get("acq"),
+                            "acquisition": self.TENSOR_TYPES.get(
+                                tensor_type
+                            ).get("acq"),
                             "desc": output_desc,
                             **self.TENSOR_ENTITIES,
                         },
@@ -287,12 +299,16 @@ class TensorEstimation(DmriprepManager):
             A dictionary with *tensor_types* as keys and a list of
             tensor-derived metrics as values
         """
-        dwis = self.get_subject_dwi(participant_label, session, queries=self.DWI_QUERY_ENTITIES)
+        dwis = self.get_subject_dwi(
+            participant_label, session, queries=self.DWI_QUERY_ENTITIES
+        )
         result = {}
         for tensor_type in tensor_types:
             result[tensor_type] = []
             for inputs in dwis:
-                outputs = self.run_single_input(inputs, tensor_type, out_metrics, force)
+                outputs = self.run_single_input(
+                    inputs, tensor_type, out_metrics, force
+                )
                 result[tensor_type].append(outputs)
         return result
 
@@ -329,10 +345,14 @@ class TensorEstimation(DmriprepManager):
             A nested dictionary with sessions as keys and a dictionary for
             each *tensor_type* as values
         """
-        tensor_types, sessions, out_metrics = self.validate_single_subject_run(participant_label, session, tensor_type, out_metrics)
+        tensor_types, sessions, out_metrics = self.validate_single_subject_run(
+            participant_label, session, tensor_type, out_metrics
+        )
         result = {}
         for session in sessions:
-            result[session] = self.run_single_session(participant_label, session, tensor_types, out_metrics, force)
+            result[session] = self.run_single_session(
+                participant_label, session, tensor_types, out_metrics, force
+            )
         return result
 
     def run_dataset(

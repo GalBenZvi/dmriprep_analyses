@@ -23,7 +23,7 @@ def read(*names, **kwargs):
 
 setup(
     name='dmriprep_analyses',
-    version='0.0.0',
+    version='0.1.0',
     license='Apache-2.0',
     description='A package to process data derived from dmriprep pipeline',
     long_description='{}\n{}'.format(
@@ -68,7 +68,8 @@ setup(
         'Issue Tracker': 'https://github.com/GalBenZvi/dmriprep_analyses/issues',
     },
     keywords=[
-        # eg: 'keyword1', 'keyword2', 'keyword3',
+        "dmriprep",
+        "analyses",
     ],
     python_requires='>=3.6',
     install_requires=[

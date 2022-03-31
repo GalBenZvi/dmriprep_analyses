@@ -52,7 +52,7 @@ KWARGS_MAPPING = dict(
     # out_metrics="save_metrics",
 )
 
-TENSOR_FITTING_CMD = "dwi2tensor {input_files} -fslgrad {bvectors_files} {bvalues_files} - | tensor2metric - -force"
+TENSOR_FITTING_CMD = "dwi2tensor {input_files} -fslgrad {bvectors_files} {bvalues_files} - | tensor2metric - -force"  # noqa
 
 
 def build_tensor_fitting_cmd(kwargs, outputs):

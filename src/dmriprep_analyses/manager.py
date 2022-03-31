@@ -114,7 +114,9 @@ class DmriprepManager:
         result = self.data_grabber.layout.get(**query)
         return Path(result[0].path) if result else None
 
-    def get_subject_dwi(self, participant_label: str, session: str = None, queries: dict = None) -> List[dict]:
+    def get_subject_dwi(
+        self, participant_label: str, session: str = None, queries: dict = None
+    ) -> List[dict]:
         """
         Locate subject's available preprocessed DWIs and their corresponding
         gradients (.bvec and .bval).
@@ -146,7 +148,9 @@ class DmriprepManager:
                     "dwi": dwi,
                     "bval": self.data_grabber.layout.get_bval(dwi),
                     "bvec": self.data_grabber.layout.get_bvec(dwi),
-                    "mask": self.data_grabber.build_path(dwi, {"desc": "brain", "suffix": "mask"}),
+                    "mask": self.data_grabber.build_path(
+                        dwi, {"desc": "brain", "suffix": "mask"}
+                    ),
                 }
             )
         return result

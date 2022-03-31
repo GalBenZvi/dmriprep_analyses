@@ -53,14 +53,19 @@ class DataGrabber:
         """
         subjects = {
             subj.name.replace(self.SUBJECT_TEMPLATE, ""): [
-                ses.name.replace(self.SESSION_TEMPLATE, "") for ses in sorted(self.base_dir.glob(f"{subj.name}/{self.SESSION_TEMPLATE}*"))
+                ses.name.replace(self.SESSION_TEMPLATE, "")
+                for ses in sorted(
+                    self.base_dir.glob(f"{subj.name}/{self.SESSION_TEMPLATE}*")
+                )
             ]
             for subj in sorted(self.base_dir.glob(f"{self.SUBJECT_TEMPLATE}*"))
             if subj.is_dir()
         }
         return subjects
 
-    def build_path(self, source: Union[dict, str, Path], replacements: dict) -> Path:
+    def build_path(
+        self, source: Union[dict, str, Path], replacements: dict
+    ) -> Path:
         """
         Build a BIDS-compatible path according to source file/entities.
 

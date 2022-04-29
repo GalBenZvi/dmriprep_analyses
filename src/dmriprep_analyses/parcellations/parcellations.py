@@ -173,8 +173,7 @@ class NativeParcellation(DmriprepManager):
         parcellation_images = self.registration_manager.run_single_subject(
             parcellation_scheme,
             participant_label,
-            participant_label,
-            session,
+            session=session,
             force=force,
         )
         subject_rows = self.generate_rows(

@@ -53,6 +53,8 @@ KWARGS_MAPPING = dict(
 )
 
 TENSOR_FITTING_CMD = "dwi2tensor {input_files} -fslgrad {bvectors_files} {bvalues_files} - | tensor2metric - -force"  # noqa
+KURTOSIS_FITTING_CMD = "dwi2tensor {input_files} -fslgrad {bvectors_files} {bvalues_files} -dkt - | tensor2metric - -force"  # noqa
+TENSOR_FITTING_CMDS = {"diffusion_tensor": TENSOR_FITTING_CMD}
 
 
 def build_tensor_fitting_cmd(kwargs, outputs):

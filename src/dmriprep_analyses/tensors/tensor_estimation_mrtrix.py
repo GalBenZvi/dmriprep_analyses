@@ -10,7 +10,7 @@ from typing import Union
 
 import tqdm
 
-from dmriprep_analyses.manager import DmriprepManager
+from dmriprep_analyses.dmriprep_analysis import DmriprepManager
 from dmriprep_analyses.tensors.messages import INVALID_OUTPUT
 from dmriprep_analyses.tensors.messages import INVALID_PARTICIPANT
 from dmriprep_analyses.tensors.messages import (

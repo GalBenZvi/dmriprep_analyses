@@ -1,68 +1,47 @@
 """
 Definition of the :class:`NativeParcellation` class.
 """
-# import warnings
+import logging
 from pathlib import Path
 from typing import Callable
 from typing import Union
 
 import numpy as np
 import pandas as pd
+from analyses_utils.data.bids import build_relative_path
+from analyses_utils.entities.analysis.logger import get_console_handler
+from analyses_utils.entities.derivatives.dmriprep import DmriprepDerivatives
+from analyses_utils.entities.session import Session
 from brain_parts.parcellation.parcellations import (
     Parcellation as parcellation_manager,
 )
-from tqdm import tqdm
 
-from dmriprep_analyses.manager import DmriprepManager
+from dmriprep_analyses.dmriprep_analysis import DmriprepAnalysis
 from dmriprep_analyses.registrations.registrations import NativeRegistration
-from dmriprep_analyses.tensors.tensor_estimation_mrtrix import TensorEstimation
+from dmriprep_analyses.tensors.tensor_estimation import TensorEstimation
 
 
-class NativeParcellation(DmriprepManager):
+class NativeParcellation(DmriprepAnalysis):
     def __init__(
         self,
-        base_dir: Path,
-        participant_labels: Union[str, list] = None,
-    ) -> None:
-        super().__init__(base_dir, participant_labels)
-        self.registration_manager = NativeRegistration(
-            base_dir, participant_labels
+        derivatives: DmriprepDerivatives = None,
+        base_dir: Union[Path, str] = None,
+        participant_label: str = None,
+        sessions_base: str = None,
+    ):
+        super().__init__(
+            derivatives, base_dir, participant_label, sessions_base
         )
+        self.logger = logging.getLogger(__name__)
+        self.logger.addHandler(get_console_handler())
+        self.registration_manager = NativeRegistration(self.derivatives)
+        self.tensor_estimation = TensorEstimation(self.derivatives)
         self.parcellation_manager = parcellation_manager()
-        self.tensor_estimation = TensorEstimation(base_dir, participant_labels)
-
-    def validate_session(
-        self, participant_label: str, session: Union[str, list] = None
-    ) -> list:
-        """
-        Validates session's input type (must be list)
-
-        Parameters
-        ----------
-        participant_label : str
-            Specific participants' labels
-        session : Union[str, list], optional
-            Specific session(s)' labels, by default None
-
-        Returns
-        -------
-        list
-            Either specified or available session(s)' labels
-        """
-        if session:
-            if isinstance(session, str):
-                sessions = [session]
-            elif isinstance(session, list):
-                sessions = session
-        else:
-            sessions = self.subjects.get(participant_label)
-        return sessions
 
     def generate_rows(
         self,
-        participant_label: str,
-        session: Union[str, list],
         tensor_type: str,
+        session: Union[str, list] = None,
     ) -> pd.MultiIndex:
         """
         Generate target DataFrame's multiindex for participant's rows.
@@ -80,10 +59,16 @@ class NativeParcellation(DmriprepManager):
             A MultiIndex comprised of participant's label
             and its corresponding sessions.
         """
-        sessions = self.validate_session(participant_label, session)
+
+        sessions = [
+            Session(
+                self.derivatives.participant, session.replace("ses-", "")
+            ).date
+            for session in self.listify_sessions(session)
+        ]
         metrics = self.tensor_estimation.METRICS.get(tensor_type)
         return pd.MultiIndex.from_product(
-            [[participant_label], sessions, metrics]
+            [[self.participant_label], sessions, metrics]
         )
 
     def build_output_name(
@@ -128,15 +113,16 @@ class NativeParcellation(DmriprepManager):
         }
         parts = parcellation_type.split("_")
         entities["desc"] = "".join([parts[0], parts[1].capitalize()])
-        return self.data_grabber.build_path(parcellation_image, entities)
+        return self.derivatives.path.parent / build_relative_path(
+            parcellation_image, entities
+        )
 
     def parcellate_single_tensor(
         self,
         parcellation_scheme: str,
         tensor_type: str,
-        participant_label: str,
+        session: str,
         parcellation_type: str = "whole_brain",
-        session: Union[str, list] = None,
         measure: Callable = np.nanmean,
         force: bool = False,
     ) -> pd.DataFrame:
@@ -166,62 +152,53 @@ class NativeParcellation(DmriprepManager):
             A DataFrame with (participant_label,session,tensor_type,metrics)
             as index and (parcellation_scheme,label) as columns
         """
-        sessions = self.validate_session(participant_label, session)
-        tensors = self.tensor_estimation.run_single_subject(
-            participant_label, session, tensor_type
-        )
-        parcellation_images = self.registration_manager.run_single_subject(
+        rows = self.generate_rows(tensor_type, session)
+        tensors = self.tensor_estimation.run(session, tensor_type)
+        parcellation_images = self.registration_manager.run(
             parcellation_scheme,
-            participant_label,
-            session=session,
+            session,
             force=force,
         )
-        subject_rows = self.generate_rows(
-            participant_label, sessions, tensor_type
-        )
-        subject_data = pd.DataFrame(index=subject_rows)
-        for session in sessions:
-            rows = self.generate_rows(participant_label, session, tensor_type)
-            data = pd.DataFrame(index=rows)
-            parcellation = parcellation_images.get(session).get(
-                parcellation_type
-            )
-            output_file = self.build_output_name(
-                parcellation_scheme,
-                parcellation_type,
-                tensor_type,
-                parcellation,
-                measure,
-            )
-            if output_file.exists() and not force:
-                data = pd.read_pickle(output_file)
-                subject_data = pd.concat([subject_data, data])
-            for metric, metric_image in (
-                tensors.get(session).get(tensor_type)[0].items()
-            ):
-                key = metric.split("_")[-1]
+        data = pd.DataFrame(index=rows)
 
-                tmp_data = self.parcellation_manager.parcellate_image(
-                    parcellation_scheme,
-                    parcellation,
-                    metric_image,
-                    key,
-                    measure=measure,
-                )
-                data.loc[
-                    (participant_label, session, key),
-                    tmp_data.index,
-                ] = tmp_data.loc[tmp_data.index]
-            data.to_pickle(output_file)
-            subject_data = pd.concat([subject_data, data])
-        return subject_data
+        session_date = Session(
+            self.derivatives.participant, session.replace("ses-", "")
+        ).date
+        parcellation = parcellation_images.get("anat").get(parcellation_type)
+        output_file = self.build_output_name(
+            parcellation_scheme,
+            parcellation_type,
+            tensor_type,
+            parcellation,
+            measure,
+        )
+        if output_file.exists() and not force:
+            return pd.read_pickle(output_file)
+        for metric, metric_image in (
+            tensors.get(session).get(tensor_type).items()
+        ):
+            key = metric.split("_")[-1]
+
+            tmp_data = self.parcellation_manager.parcellate_image(
+                parcellation_scheme,
+                parcellation,
+                metric_image,
+                key,
+                measure=measure,
+            )
+            data.loc[
+                (self.participant_label, session_date, key),
+                tmp_data.index,
+            ] = tmp_data.loc[tmp_data.index]
+        data.to_pickle(output_file)
+        return data
 
     def parcellate_single_subject(
         self,
         parcellation_scheme: str,
-        participant_label: str,
         parcellation_type: str = "whole_brain",
         session: Union[str, list] = None,
+        tensor_types: Union[str, list] = None,
         measure: Callable = np.nanmean,
         force: bool = False,
     ) -> pd.DataFrame:
@@ -249,62 +226,25 @@ class NativeParcellation(DmriprepManager):
             All subject's availble parcellated data
         """
         data = pd.DataFrame()
-        for tensor_type in self.tensor_estimation.TENSOR_TYPES:
-            # try:
-            tensor_data = self.parcellate_single_tensor(
-                parcellation_scheme,
-                tensor_type,
-                participant_label,
-                parcellation_type,
-                session,
-                measure,
-                force,
-            )
-            tensor_data = pd.concat([tensor_data], keys=[tensor_type])
-            data = pd.concat([data, tensor_data])
-        return data
-
-    def parcellate_dataset(
-        self,
-        parcellation_scheme: str,
-        parcellation_type: str = "whole_brain",
-        measure: Callable = np.nanmean,
-        force: bool = False,
-    ) -> pd.DataFrame:
-        """
-        Iterates over dataset's available participants
-        and reconstructs their tensor-derived metrics' data.
-
-        Parameters
-        ----------
-        parcellation_scheme : str
-            Parcellation scheme to parcellate by
-        parcellation_type : str, optional
-            Either "whole_brain" or "gm_cropped", by default "whole_brain"
-        measure : Callable, optional
-            Measure to parcellate by, by default np.nanmean
-        force : bool, optional
-            Whether to re-write existing files, by default False
-
-        Returns
-        -------
-        pd.DataFrame
-            A dataframe describing all dataset's available tensor-derived data.
-        """
-        data = pd.DataFrame()
-        for participant_label in tqdm(self.subjects):
-            print(participant_label)
-            data = pd.concat(
-                [
-                    data,
-                    self.parcellate_single_subject(
-                        parcellation_scheme,
-                        participant_label,
-                        parcellation_type,
-                        measure=measure,
-                        force=force,
-                    ),
-                ]
-            )
-
+        for session in self.listify_sessions(session):
+            session_data = pd.DataFrame()
+            for tensor_type in self.tensor_estimation.listify_tensor_type(
+                tensor_types
+            ):
+                # try:
+                tensor_data = self.parcellate_single_tensor(
+                    parcellation_scheme,
+                    tensor_type,
+                    session,
+                    parcellation_type,
+                    measure,
+                    force,
+                )
+                tensor_data = pd.concat([tensor_data], keys=[tensor_type])
+                session_data = pd.concat([session_data, tensor_data])
+            data = pd.concat([data, session_data])
+        # except (TypeError, FileNotFoundError):
+        #     warnings.warn(
+        #         f"Encountered an error when trying to parcellate subject {participant_label}'s data..."  # noqa
+        #     )
         return data

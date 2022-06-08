@@ -10,17 +10,17 @@ from typing import Union
 
 import tqdm
 
-from dmriprep_analyses.manager import DmriprepManager
+from dmriprep_analyses.dmriprep_analysis import DmriprepManager
 from dmriprep_analyses.tensors.messages import INVALID_OUTPUT
 from dmriprep_analyses.tensors.messages import INVALID_PARTICIPANT
 from dmriprep_analyses.tensors.messages import (
     TENSOR_RECONSTRUCTION_NOT_IMPLEMENTED,
 )
-from dmriprep_analyses.tensors.utils import DWI_ENTITIES
-from dmriprep_analyses.tensors.utils import KWARGS_MAPPING
-from dmriprep_analyses.tensors.utils import TENSOR_DERIVED_ENTITIES
-from dmriprep_analyses.tensors.utils import TENSOR_DERIVED_METRICS
-from dmriprep_analyses.tensors.utils import build_tensor_fitting_cmd
+from dmriprep_analyses.tensors.utils_mrtrix import DWI_ENTITIES
+from dmriprep_analyses.tensors.utils_mrtrix import KWARGS_MAPPING
+from dmriprep_analyses.tensors.utils_mrtrix import TENSOR_DERIVED_ENTITIES
+from dmriprep_analyses.tensors.utils_mrtrix import TENSOR_DERIVED_METRICS
+from dmriprep_analyses.tensors.utils_mrtrix import build_tensor_fitting_cmd
 
 
 class TensorEstimation(DmriprepManager):

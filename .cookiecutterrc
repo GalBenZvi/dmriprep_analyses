@@ -10,7 +10,7 @@ default_context:
     c_extension_test_pypi: no
     c_extension_test_pypi_username: GalBenZvi
     codacy: no
-    codacy_projectid: '[Get ID from https://app.codacy.com/gh/niparser/qsiprep_analyses/settings]'
+    codacy_projectid: "[Get ID from https://app.codacy.com/gh/niparser/qsiprep_analyses/settings]"
     codeclimate: no
     codecov: yes
     command_line_interface: click
@@ -52,5 +52,5 @@ default_context:
     version: 0.0.0
     version_manager: bump2version
     website: https://github.com/niparser/
-    year_from: '2022'
-    year_to: '2021'
+    year_to: "2022"
+    year_from: "2021"

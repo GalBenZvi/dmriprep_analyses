@@ -10,24 +10,23 @@ from typing import Union
 import nibabel as nib
 from analyses_utils.data.bids import build_relative_path
 from analyses_utils.entities.analysis.logger import get_console_handler
-from analyses_utils.entities.derivatives.qsiprep import QsiprepDerivatives
+from analyses_utils.entities.derivatives.dmriprep import DmriprepDerivatives
 from brain_parts.parcellation.parcellations import (
     Parcellation as parcellation_manager,
 )
-from nipype.interfaces.fsl import ApplyXfm
+from nilearn.image.resampling import resample_to_img
 
-from dmriprep_analyses.dmriprep_analysis import QsiprepAnalysis
+from dmriprep_analyses.dmriprep_analysis import DmriprepAnalysis
 from dmriprep_analyses.registrations.utils.utils import ANAT_REG_KEYS
 from dmriprep_analyses.registrations.utils.utils import (
     DEFAULT_PARCELLATION_NAMING,
 )
-from dmriprep_analyses.registrations.utils.utils import DWI_REG_KEYS
 from dmriprep_analyses.registrations.utils.utils import PROBSEG_THRESHOLD
 from dmriprep_analyses.registrations.utils.utils import QUERIES
 from dmriprep_analyses.registrations.utils.utils import TRANSFORMS
 
 
-class NativeRegistration(QsiprepAnalysis):
+class NativeRegistration(DmriprepAnalysis):
     #: Queries
     QUERIES = QUERIES
     #: Naming
@@ -41,7 +40,7 @@ class NativeRegistration(QsiprepAnalysis):
 
     def __init__(
         self,
-        derivatives: QsiprepDerivatives = None,
+        derivatives: DmriprepDerivatives = None,
         base_dir: Union[Path, str] = None,
         participant_label: str = None,
         sessions_base: str = None,
@@ -75,7 +74,11 @@ class NativeRegistration(QsiprepAnalysis):
         return [self.get_derivative(**QUERIES.get(key)) for key in keys]
 
     def build_output_dictionary(
-        self, parcellation_scheme: str, reference: Path, space: str
+        self,
+        parcellation_scheme: str,
+        reference: Path,
+        resolution: str,
+        space: str = "T1w",
     ) -> dict:
         """
         Based on a *reference* image,
@@ -96,6 +99,7 @@ class NativeRegistration(QsiprepAnalysis):
         """
         basic_query = dict(
             atlas=parcellation_scheme,
+            resolution=resolution,
             space=space,
             **self.DEFAULT_PARCELLATION_NAMING,
         )
@@ -138,7 +142,7 @@ class NativeRegistration(QsiprepAnalysis):
         mni2native, reference, gm_probseg = self.collect_requirements()
         whole_brain, gm_cropped = [
             self.build_output_dictionary(
-                parcellation_scheme, reference, resolution="anat"
+                parcellation_scheme, reference, resolution="T1w"
             ).get(key)
             for key in ["whole_brain", "gm_cropped"]
         ]
@@ -186,10 +190,11 @@ class NativeRegistration(QsiprepAnalysis):
             Whether to re-write existing files, by default False
         """
         self.logger.info("Resampling parcellation scheme to DWI space")
-        reference, dwi2anat, anat2dwi = [
-            self.get_derivative(session, **QUERIES.get(key))
-            for key in DWI_REG_KEYS
-        ]
+        # reference, dwi2anat, anat2dwi = [
+        #     self.get_derivative(session, **QUERIES.get(key))
+        #     for key in DWI_REG_KEYS
+        # ]
+        reference = self.get_derivative(session, "coreg_dwi_image")
         # reference = self.get_derivative(session, "coreg_dwi_image")
         if not reference:
             raise FileNotFoundError(
@@ -197,7 +202,7 @@ class NativeRegistration(QsiprepAnalysis):
             )
         whole_brain, gm_cropped = [
             self.build_output_dictionary(
-                parcellation_scheme, reference, "dwi"
+                parcellation_scheme, reference, resolution="dwi"
             ).get(key)
             for key in ["whole_brain", "gm_cropped"]
         ]
@@ -206,15 +211,10 @@ class NativeRegistration(QsiprepAnalysis):
             [whole_brain, gm_cropped],
         ):
             if not target.exists() or force:
-                app = ApplyXfm(
-                    in_file=source,
-                    reference=reference,
-                    out_file=target,
-                    in_matrix_file=anat2dwi,
-                    apply_xfm=True,
-                    interp="nearestneighbour",
+                img = resample_to_img(
+                    str(source), str(reference), interpolation="nearest"
                 )
-                app.run()
+                nib.save(img, target)
 
         return whole_brain, gm_cropped
 

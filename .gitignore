@@ -75,3 +75,4 @@ docs/_build
 
 # Trials
 *.ipynb
+runner.py

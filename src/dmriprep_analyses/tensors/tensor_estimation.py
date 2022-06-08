@@ -40,8 +40,8 @@ class TensorEstimation(DmriprepAnalysis):
     }
     #: Tensor types
     TENSOR_TYPES = dict(
-        diffusion_tensor={"acq": "dt", "kwargs": {"fit_method": "WLS"}},
-        diffusion_kurtosis={"acq": "dk", "kwargs": {"fit_method": "WLS"}},
+        diffusion_tensor={"acq": "dt", "kwargs": {"fit_method": "NLLS"}},
+        diffusion_kurtosis={"acq": "dk", "kwargs": {"fit_method": "NLLS"}},
         restore_tensor={
             "acq": "rt",
             "kwargs": {"fit_method": "restore", "sigma": estimate_sigma},
@@ -264,6 +264,8 @@ class TensorEstimation(DmriprepAnalysis):
             self.logger.warning(msg)
             if not force:
                 return outputs
+            else:
+                [Path(output).unlink() for output in outputs.values()]
         workflow = self.TENSOR_WORKFLOWS.get(tensor_type)()
         msg = self.format_reconstruction_message(
             tensor_type, session, kwargs, False

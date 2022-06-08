@@ -112,7 +112,7 @@ class NativeParcellation(DmriprepAnalysis):
             "measure": measure,
         }
         parts = parcellation_type.split("_")
-        entities["desc"] = "".join([parts[0], parts[1].capitalize()])
+        entities["label"] = "".join([parts[0], parts[1].capitalize()])
         return self.derivatives.path.parent / build_relative_path(
             parcellation_image, entities
         )
@@ -164,7 +164,7 @@ class NativeParcellation(DmriprepAnalysis):
         session_date = Session(
             self.derivatives.participant, session.replace("ses-", "")
         ).date
-        parcellation = parcellation_images.get("anat").get(parcellation_type)
+        parcellation = parcellation_images.get(session).get(parcellation_type)
         output_file = self.build_output_name(
             parcellation_scheme,
             parcellation_type,

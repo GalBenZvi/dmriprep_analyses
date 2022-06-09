@@ -5,7 +5,6 @@ import dipy.denoise.noise_estimate as ne
 from bids.layout import parse_file_entities
 from bids.layout.writing import build_path
 from dipy.io.image import load_nifti
-
 from qsiprep_analyses.data.bids import DEFAULT_PATTERNS
 
 

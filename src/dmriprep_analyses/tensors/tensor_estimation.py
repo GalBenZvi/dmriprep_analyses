@@ -3,50 +3,36 @@ Definition of the :class:`TensorEstimation` class.
 """
 import logging
 from pathlib import Path
-from typing import Callable
-from typing import List
-from typing import Union
+from typing import Callable, List, Union
 
 from analyses_utils.data.bids import build_relative_path
 from analyses_utils.entities.analysis.logger import get_console_handler
 from analyses_utils.entities.derivatives.dmriprep import DmriprepDerivatives
-from dipy.workflows.reconst import ReconstDkiFlow
-from dipy.workflows.reconst import ReconstDtiFlow
 
 from dmriprep_analyses.dmriprep_analysis import DmriprepAnalysis
-from dmriprep_analyses.tensors.utils.functions import estimate_sigma
-from dmriprep_analyses.tensors.utils.messages import INVALID_OUTPUT
-from dmriprep_analyses.tensors.utils.messages import OUTPUTS_EXIST
-from dmriprep_analyses.tensors.utils.messages import RECONSTRUCTION_WORKFLOW
 from dmriprep_analyses.tensors.utils.messages import (
+    INVALID_OUTPUT,
+    OUTPUTS_EXIST,
+    RECONSTRUCTION_WORKFLOW,
     TENSOR_RECONSTRUCTION_NOT_IMPLEMENTED,
 )
-from dmriprep_analyses.tensors.utils.templates import KWARGS_MAPPING
 from dmriprep_analyses.tensors.utils.templates import TENSOR_DERIVED_ENTITIES
-from dmriprep_analyses.tensors.utils.templates import TENSOR_DERIVED_METRICS
 
 
 class TensorEstimation(DmriprepAnalysis):
+
+    TENSORS_BASE = None
+    INPUT_KEY = None
     #: Templates
     TENSOR_ENTITIES = TENSOR_DERIVED_ENTITIES.copy()
-    METRICS = TENSOR_DERIVED_METRICS.copy()
+    METRICS = None
 
     #: Tensor Workflows
-    TENSOR_FITTING_KWARGS = KWARGS_MAPPING
-    TENSOR_WORKFLOWS = {
-        "diffusion_tensor": ReconstDtiFlow,
-        "diffusion_kurtosis": ReconstDkiFlow,
-        "restore_tensor": ReconstDtiFlow,
-    }
+    TENSOR_FITTING_KWARGS = None
+    TENSOR_WORKFLOWS = None
+
     #: Tensor types
-    TENSOR_TYPES = dict(
-        diffusion_tensor={"acq": "dt", "kwargs": {"fit_method": "NLLS"}},
-        diffusion_kurtosis={"acq": "dk", "kwargs": {"fit_method": "NLLS"}},
-        restore_tensor={
-            "acq": "rt",
-            "kwargs": {"fit_method": "restore", "sigma": estimate_sigma},
-        },
-    )
+    TENSOR_TYPES = None
 
     def __init__(
         self,
@@ -171,12 +157,22 @@ class TensorEstimation(DmriprepAnalysis):
         }
         for output in outputs:
             if self.validate_requested_output(tensor_type, output):
-                target[f"out_{output}"] = _gen_output_name(
-                    output=output,
-                    parent=self.derivatives.path.parent,
-                    source=source,
-                    entities=entities,
+                base_target = Path(
+                    self._gen_output_name(
+                        output=output,
+                        parent=self.derivatives.path.parent,
+                        source=source,
+                        entities=entities,
+                    )
                 )
+                if self.TENSORS_BASE:
+                    base_target = (
+                        base_target.parent
+                        / self.TENSORS_BASE
+                        / base_target.name
+                    )
+                    base_target.parent.mkdir(exist_ok=True)
+                target[f"out_{output}"] = str(base_target)
         return target
 
     def get_inputs(self, session: str):
@@ -251,7 +247,7 @@ class TensorEstimation(DmriprepAnalysis):
             return
         inputs = self.get_inputs(session)
         outputs = self.build_output_dictionary(
-            inputs.get("input_files"), tensor_type, outputs
+            inputs.get(self.INPUT_KEY), tensor_type, outputs
         )
         kwargs = dict(
             **inputs, **outputs, **self.get_kwargs(inputs, tensor_type)
@@ -270,7 +266,7 @@ class TensorEstimation(DmriprepAnalysis):
         msg = self.format_reconstruction_message(
             tensor_type, session, kwargs, False
         )
-        self.logger.info(msg)
+        self.logger.debug(msg)
         workflow.run(**kwargs)
         return outputs
 
@@ -305,7 +301,7 @@ class TensorEstimation(DmriprepAnalysis):
         self,
         sessions: str = None,
         tensor_types: Union[str, list] = None,
-        force: bool = True,
+        force: bool = False,
     ):
         """
         Run the tensor estimation workflow.
@@ -331,22 +327,24 @@ class TensorEstimation(DmriprepAnalysis):
                 )
         return output
 
-
-def _gen_output_name(
-    output: str,
-    parent: Union[str, Path],
-    source: Union[str, Path],
-    entities: dict,
-):
-    output_parts = output.split("_")
-    if len(output_parts) > 1:
-        output_desc = "".join([output_parts[0], output_parts[1].capitalize()])
-    else:
-        output_desc = output
-    return str(
-        Path(parent)
-        / build_relative_path(
-            source,
-            {"desc": output_desc, **entities},
+    @staticmethod
+    def _gen_output_name(
+        output: str,
+        parent: Union[str, Path],
+        source: Union[str, Path],
+        entities: dict,
+    ):
+        output_parts = output.split("_")
+        if len(output_parts) > 1:
+            output_desc = "".join(
+                [output_parts[0], output_parts[1].capitalize()]
+            )
+        else:
+            output_desc = output
+        return str(
+            Path(parent)
+            / build_relative_path(
+                source,
+                {"desc": output_desc, **entities},
+            )
         )
-    )

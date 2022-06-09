@@ -3,8 +3,7 @@ Definition of the :class:`NativeParcellation` class.
 """
 import logging
 from pathlib import Path
-from typing import Callable
-from typing import Union
+from typing import Callable, Union
 
 import numpy as np
 import pandas as pd
@@ -18,16 +17,31 @@ from brain_parts.parcellation.parcellations import (
 
 from dmriprep_analyses.dmriprep_analysis import DmriprepAnalysis
 from dmriprep_analyses.registrations.registrations import NativeRegistration
-from dmriprep_analyses.tensors.tensor_estimation import TensorEstimation
+from dmriprep_analyses.tensors.dipy.dipy_tensor_estimation import (
+    DipyTensorEstimation,
+)
+from dmriprep_analyses.tensors.fsl.fsl_tensor_estimation import (
+    FslTensorEstimation,
+)
+from dmriprep_analyses.tensors.mrtrix.mrtrix_tensor_estimation import (
+    MrtrixTensorEstimation,
+)
 
 
 class NativeParcellation(DmriprepAnalysis):
+    TENSOR_RECONSTRUCTURION_SOFTWARES = {
+        "dipy": DipyTensorEstimation,
+        "fsl": FslTensorEstimation,
+        "mrtrix": MrtrixTensorEstimation,
+    }
+
     def __init__(
         self,
         derivatives: DmriprepDerivatives = None,
         base_dir: Union[Path, str] = None,
         participant_label: str = None,
         sessions_base: str = None,
+        tensor_reconstruction_software: str = "dipy",
     ):
         super().__init__(
             derivatives, base_dir, participant_label, sessions_base
@@ -35,7 +49,9 @@ class NativeParcellation(DmriprepAnalysis):
         self.logger = logging.getLogger(__name__)
         self.logger.addHandler(get_console_handler())
         self.registration_manager = NativeRegistration(self.derivatives)
-        self.tensor_estimation = TensorEstimation(self.derivatives)
+        self.tensor_estimation = self.TENSOR_RECONSTRUCTURION_SOFTWARES.get(
+            tensor_reconstruction_software
+        )(self.derivatives)
         self.parcellation_manager = parcellation_manager()
 
     def generate_rows(
@@ -113,8 +129,13 @@ class NativeParcellation(DmriprepAnalysis):
         }
         parts = parcellation_type.split("_")
         entities["label"] = "".join([parts[0], parts[1].capitalize()])
-        return self.derivatives.path.parent / build_relative_path(
+        base_target = self.derivatives.path.parent / build_relative_path(
             parcellation_image, entities
+        )
+        return (
+            base_target.parent
+            / self.tensor_estimation.TENSORS_BASE
+            / base_target.name
         )
 
     def parcellate_single_tensor(
